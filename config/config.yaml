@@ -1,0 +1,6 @@
+db:
+  username: root
+  password: DevOps022019_
+  host: "127.0.0.1"
+  port: "3306"
+  database: diplom
