@@ -21,6 +21,17 @@ func main() {
 		`); err != nil {
 		panic(err)
 	}
+
+	if _, err := config.Database.Exec(`
+	CREATE TABLE user_codes (
+		code VARCHAR(255) NOT NULL unique,
+		user_id INT NOT NULL unique,
+		FOREIGN KEY (user_id) REFERENCES users (id)
+	);
+	`); err != nil {
+	panic(err)
+}
+
 	if _, err := config.Database.Exec(`
 		CREATE TABLE tokens (
 			id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
@@ -37,13 +48,12 @@ func main() {
 			id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 			initiator_id INT NOT NULL,
 			agreeing_id INT NOT NULL,
-			secret VARCHAR(255) NOT NULL,
+			secret VARCHAR(255) NOT NULL unique,
 			status ENUM('ACTIVE', 'DELETED', 'CREATED') NOT NULL,
 			created_at Date DEFAULT NOW(), 
-			updated_at Date
-			CONSTRAINT UC_Contact UNIQUE (secret)
-			FORENGN KEY(initiator_id) REFERENCES users(id)
-			FORENGN KEY(agreeing_id) REFERENCES users(id)
+			updated_at Date,
+			CONSTRAINT `fk_contact_initiator` FOREIGN KEY (initiator_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE RESTRICT,
+			CONSTRAINT `fk_contact_agreeing` FOREIGN KEY (agreeing_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE RESTRICT
 		);
 		`); err != nil {
 		panic(err)
@@ -57,7 +67,7 @@ func main() {
 			text TEXT NOT NULL,
 			created_at Date DEFAULT NOW(),
 			updated_at Date,
-			FOREGN KEY (contact_id) REFERENCES contacts (id)
+			CONSTRAINT `fk_message_contact` FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE CASCADE ON UPDATE RESTRICT
 		);
 		`); err != nil {
 		panic(err)
@@ -70,7 +80,7 @@ func main() {
 			name VARCHAR(255) NOT NULL,
 			created_at Date DEFAULT NOW(),
 			CONSTRAINT UC_Group UNIQUE (name),
-			FOREGN KEY (owner_id) REFERENCES users (id)
+			FOREIGN KEY (owner_id) REFERENCES users (id)
 		);
 		`); err != nil {
 		panic(err)

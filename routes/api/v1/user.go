@@ -19,6 +19,28 @@ type User struct {
 	Password  string    `json:"password"`
 }
 
+func GetInfo(ctx *gin.Context) {
+	userId, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusBadRequest, exceptions.ErrorWithStatus{
+			Code:    http.StatusBadRequest,
+			Message: "Unauthorized",
+		})
+		return
+	}
+
+	user, err := user_service.GetUser(userId.(int64))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, exceptions.ErrorWithStatus{
+			Code:    http.StatusBadRequest,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, user)
+}
+
 func GetUser(ctx *gin.Context) {
 	userIdString := ctx.Param("id")
 
@@ -66,11 +88,12 @@ func Registration(ctx *gin.Context) {
 		return
 	}
 
-	ctx.SetCookie("token", token, int(time.Hour)*24, "*", "*", false, false)
+	ctx.Header("token", token)
+	ctx.SetCookie("token", token, int(time.Hour)/1000000, "*", "*", false, true)
 	ctx.Status(http.StatusOK)
 }
 
-func Login(ctx * gin.Context) {
+func Login(ctx *gin.Context) {
 	var body struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -93,6 +116,6 @@ func Login(ctx * gin.Context) {
 		return
 	}
 
-	ctx.SetCookie("token", token, int(time.Hour)*24, "*", "*", false, false)
+	ctx.SetCookie("token", token, int(time.Hour)/1000000, "*", "*", false, false)
 	ctx.Status(http.StatusOK)
 }
